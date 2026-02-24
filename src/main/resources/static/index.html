@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>CoffeeLab - Программа лояльности</title>
+    <style>
+        /* ========== СТИЛИ (без изменений, только внешний вид) ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9eef5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            margin-bottom: 30px;
+        }
+
+        .app-header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .app-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .role-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .role-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 25px 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .role-btn.client {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .role-btn.barista {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .role-btn.admin {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .role-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            border: 4px solid white;
+        }
+
+        .role-btn:hover {
+            transform: translateY(-5px);
+        }
+
+        .role-panel {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .role-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .card-header i {
+            font-size: 2.2rem;
+        }
+
+        .card.client-card {
+            border-top: 10px solid #2ecc71;
+        }
+
+        .card.barista-card {
+            border-top: 10px solid #f39c12;
+        }
+
+        .card.admin-card {
+            border-top: 10px solid #9b59b6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 18px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            transition: border 0.3s;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #3498db;
+            outline: none;
+            background: white;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(52,152,219,0.3);
+        }
+
+        .action-btn:hover {
+            background: #2980b9;
+            transform: translateY(-3px);
+        }
+
+        .action-btn.secondary {
+            background: #95a5a6;
+            box-shadow: 0 5px 15px rgba(149,165,166,0.3);
+        }
+
+        .action-btn.success {
+            background: #27ae60;
+            box-shadow: 0 5px 15px rgba(39,174,96,0.3);
+        }
+
+        .action-btn.warning {
+            background: #f39c12;
+            box-shadow: 0 5px 15px rgba(243,156,18,0.3);
+        }
+
+        .action-btn.danger {
+            background: #e74c3c;
+            box-shadow: 0 5px 15px rgba(231,76,60,0.3);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .product-tile {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px 15px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .product-tile:hover {
+            transform: translateY(-5px);
+            border-color: #3498db;
+            box-shadow: 0 10px 25px rgba(52,152,219,0.2);
+        }
+
+        .product-tile.selected {
+            border-color: #2ecc71;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        }
+
+        .product-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .product-desc {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .category-pill {
+            padding: 15px 35px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            background: #f8f9fa;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+        }
+
+        .category-pill.active {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+
+        .category-pill.coffee { background: #f39c12; color: white; }
+        .category-pill.tea { background: #27ae60; color: white; }
+        .category-pill.dessert { background: #e74c3c; color: white; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.1rem;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 3px solid #dee2e6;
+        }
+
+        .data-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .badge.success { background: #d4edda; color: #155724; }
+        .badge.warning { background: #fff3cd; color: #856404; }
+        .badge.danger { background: #f8d7da; color: #721c24; }
+
+        .balance-info {
+            background: linear-gradient(135deg, #f6f9fc, #e9f2f9);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        .balance-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            font-size: 1.4rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .final-total {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #27ae60;
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .mini-cart {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 100px auto;
+            padding: 40px;
+            max-width: 600px;
+            border-radius: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .role-btn {
+                min-width: 100%;
+                padding: 20px;
+                font-size: 1.3rem;
+            }
+
+            .card-header {
+                font-size: 1.5rem;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="app-header">
+        <h1>☕ CoffeeLab</h1>
+        <p>Программа лояльности • Бонусы 1₽ = 1 балл • Кэшбэк 5%</p>
+    </div>
+
+    <div class="role-nav">
+        <button class="role-btn client" onclick="switchRole('client')">👤 КЛИЕНТ</button>
+        <button class="role-btn barista" onclick="switchRole('barista')">👨‍🍳 БАРИСТА</button>
+        <button class="role-btn admin" onclick="switchRole('admin')">👑 АДМИН</button>
+    </div>
+
+    <!-- ========== ПАНЕЛЬ КЛИЕНТА ========== -->
+    <div id="client-panel" class="role-panel active">
+        <div class="dashboard-grid">
+            <div class="card client-card">
+                <div class="card-header">
+                    <span>📝 Регистрация</span>
+                </div>
+                <div class="form-group">
+                    <label>Телефон:</label>
+                    <input type="text" id="reg-phone" value="+79991112233" placeholder="+7 (999) 111-22-33">
+                </div>
+                <div class="form-group">
+                    <label>Имя (опционально):</label>
+                    <input type="text" id="reg-name" placeholder="Как к вам обращаться?">
+                </div>
+                <button class="action-btn success" onclick="registerClient()">
+                    🎁 Зарегистрироваться (+50 бонусов)
+                </button>
+            </div>
+
+            <div class="card client-card">
+                <div class="card-header">
+                    <span>💰 Баланс</span>
+                </div>
+                <div class="form-group">
+                    <label>Телефон для поиска:</label>
+                    <input type="text" id="balance-phone" value="+79991112233">
+                </div>
+                <button class="action-btn" onclick="findClient()">
+                    🔍 Найти клиента
+                </button>
+                <div class="balance-info" id="balance-display" style="display: none;">
+                    <div>Текущий баланс:</div>
+                    <div class="balance-amount" id="balance-amount">0</div>
+                    <div style="font-size:1.2rem; color:#7f8c8d;">1 бонус = 1 рубль</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card client-card">
+                <div class="card-header">
+                    <span>📊 История операций</span>
+                </div>
+                <div class="form-group">
+                    <label>Телефон клиента:</label>
+                    <input type="text" id="history-phone" value="+79991112233">
+                </div>
+                <button class="action-btn secondary" onclick="loadBonusHistory()">
+                    📜 Показать историю
+                </button>
+                <div id="history-table" style="margin-top:20px; max-height:400px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== ПАНЕЛЬ БАРИСТЫ ========== -->
+    <div id="barista-panel" class="role-panel">
+        <div class="dashboard-grid">
+            <div class="card barista-card">
+                <div class="card-header">
+                    <span>📋 Категории</span>
+                </div>
+                <div class="category-pills" id="category-pills">
+                    <div class="category-pill coffee active" onclick="filterProducts('all')">📌 Все</div>
+                    <div class="category-pill coffee" onclick="filterProducts('Кофе')">☕ Кофе</div>
+                    <div class="category-pill tea" onclick="filterProducts('Чай')">🍵 Чай</div>
+                    <div class="category-pill dessert" onclick="filterProducts('Десерты')">🍰 Десерты</div>
+                </div>
+
+                <div class="products-grid" id="products-grid">
+                    <!-- Товары загрузятся через API -->
+                </div>
+            </div>
+
+            <div class="card barista-card">
+                <div class="card-header">
+                    <span>🛒 Текущий заказ</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Номер заказа:</label>
+                    <input type="text" id="current-order-id" value="" readonly>
+                </div>
+
+                <div class="balance-info" style="padding:20px;">
+                    <div style="font-weight:bold; margin-bottom:15px;">👤 Клиент:</div>
+                    <div id="order-client">Не выбран</div>
+                    <div id="order-client-balance" style="color:#27ae60;"></div>
+                    <button class="action-btn secondary" style="margin-top:15px;" onclick="showClientSearch()">
+                        🔍 Найти/сменить клиента
+                    </button>
+                </div>
+
+                <div class="mini-cart" id="mini-cart">
+                    <!-- Позиции заказа будут здесь -->
+                </div>
+
+                <div class="totals-row">
+                    <span>Subtotal:</span>
+                    <span id="cart-subtotal">0₽</span>
+                </div>
+                <div class="totals-row">
+                    <span>Бонусы к списанию:</span>
+                    <span>
+                            <input type="number" id="bonus-to-spend" value="0" min="0" style="width:100px; padding:10px;">
+                        </span>
+                </div>
+                <div class="totals-row" style="color:#e67e22;">
+                    <span>Лимит 30%:</span>
+                    <span id="bonus-limit">0₽</span>
+                </div>
+                <div class="final-total" id="cart-total">
+                    0₽
+                </div>
+
+                <button class="action-btn warning" onclick="createNewOrder()">
+                    ➕ Новый заказ
+                </button>
+                <button class="action-btn" onclick="showAddItemModal()">
+                    ➕ Добавить товар
+                </button>
+                <button class="action-btn success" onclick="spendBonuses()">
+                    💰 Списать бонусы
+                </button>
+                <button class="action-btn danger" onclick="completeOrder()">
+                    ✅ Завершить заказ (+5% кэшбэк)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== ПАНЕЛЬ АДМИНА ========== -->
+    <div id="admin-panel" class="role-panel">
+        <div class="dashboard-grid">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <span>📦 Управление меню</span>
+                </div>
+                <div class="form-group">
+                    <label>Фильтр по категории:</label>
+                    <select id="admin-category-filter" onchange="filterAdminProducts()">
+                        <option value="all">Все категории</option>
+                        <option value="Кофе">Кофе</option>
+                        <option value="Чай">Чай</option>
+                        <option value="Десерты">Десерты</option>
+                    </select>
+                </div>
+
+                <div style="margin-top:20px; max-height:400px; overflow-y:auto;">
+                    <table class="data-table" id="products-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Категория</th>
+                            <th>Название</th>
+                            <th>Цена</th>
+                            <th>Активен</th>
+                        </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                        <!-- Данные из API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card admin-card">
+                <div class="card-header">
+                    <span>📊 Статистика</span>
+                </div>
+
+                <button class="action-btn" onclick="loadAdminStats()">
+                    📈 Показать статистику
+                </button>
+
+                <div class="balance-info" style="margin-top:20px;" id="stats-display">
+                    <!-- Статистика будет здесь -->
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <span>📦 Все заказы</span>
+                </div>
+                <div style="max-height:500px; overflow-y:auto;">
+                    <table class="data-table" id="orders-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Дата</th>
+                            <th>Клиент</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                        </tr>
+                        </thead>
+                        <tbody id="orders-table-body">
+                        <!-- Данные из API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card admin-card">
+                <div class="card-header">
+                    <span>👥 Все клиенты</span>
+                </div>
+                <div style="max-height:500px; overflow-y:auto;" id="clients-list">
+                    <!-- Клиенты будут здесь -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно поиска клиента -->
+    <div id="client-search-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom:20px;">🔍 Поиск клиента</h2>
+            <div class="form-group">
+                <input type="text" id="search-phone" placeholder="+7 (999) 111-22-33" value="+79991112233">
+            </div>
+            <button class="action-btn" onclick="searchClient()">Найти</button>
+            <button class="action-btn secondary" onclick="registerNewClient()">Зарегистрировать нового (+50)</button>
+            <button class="action-btn secondary" onclick="hideClientSearch()">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления товара -->
+    <div id="add-item-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom:20px;">➕ Добавить товар</h2>
+            <div class="form-group">
+                <label>Товар:</label>
+                <select id="add-product-select" style="width:100%; padding:15px;">
+                    <!-- Товары загрузятся через API -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Количество:</label>
+                <input type="number" id="add-product-qty" value="1" min="1" style="width:100%; padding:15px;">
+            </div>
+            <button class="action-btn" onclick="addItemToOrder()">Добавить</button>
+            <button class="action-btn secondary" onclick="hideAddItemModal()">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Результаты API -->
+    <div style="margin-top:30px; background: #2d3436; color: #dfe6e9; padding:20px; border-radius:15px; font-family: monospace;">
+        <div style="display: flex; justify-content: space-between;">
+            <span>📡 API Response:</span>
+            <button onclick="clearResponse()" style="background: none; border: 1px solid #dfe6e9; color: #dfe6e9; padding:5px 15px; border-radius:5px; cursor:pointer;">Очистить</button>
+        </div>
+        <pre id="api-response" style="margin-top:15px; white-space: pre-wrap; max-height:300px; overflow-y:auto;">Готов к работе...</pre>
+    </div>
+</div>
+
+<script>
+    // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+    let currentOrderId = null;
+    let currentClient = null;
+    let currentOrder = null;
+    let products = [];
+
+    // ========== УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ВЫЗОВА API ==========
+    async function apiCall(url, method = 'GET', body = null) {
+        try {
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Ошибка запроса');
+            }
+
+            document.getElementById('api-response').innerText = JSON.stringify(data, null, 2);
+            return data;
+        } catch (error) {
+            document.getElementById('api-response').innerText = 'Ошибка: ' + error;
+            return null;
+        }
+    }
+
+    function clearResponse() {
+        document.getElementById('api-response').innerText = 'Готов к работе...';
+    }
+
+    // ========== ПЕРЕКЛЮЧЕНИЕ РОЛЕЙ ==========
+    function switchRole(role) {
+        document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        document.querySelectorAll('.role-panel').forEach(panel => panel.classList.remove('active'));
+        document.getElementById(role + '-panel').classList.add('active');
+
+        if (role === 'barista') {
+            loadProductsForBarista();
+        } else if (role === 'admin') {
+            loadAdminProducts();
+            loadAllOrders();
+            loadAllClients();
+        }
+    }
+
+    // ========== КЛИЕНТ ==========
+    async function registerClient() {
+        const phone = document.getElementById('reg-phone').value;
+        const name = document.getElementById('reg-name').value || 'Клиент';
+
+        const data = await apiCall('/api/clients/register', 'POST', {
+            phone: phone,
+            fullName: name
+        });
+
+        if (data) {
+            alert('Клиент зарегистрирован! Бонусов: ' + data.bonusBalance);
+            document.getElementById('balance-display').style.display = 'block';
+            document.getElementById('balance-amount').innerText = data.bonusBalance;
+        }
+    }
+
+    async function findClient() {
+        const phone = document.getElementById('balance-phone').value;
+        const data = await apiCall('/api/clients/by-phone/' + encodeURIComponent(phone));
+
+        if (data) {
+            document.getElementById('balance-display').style.display = 'block';
+            document.getElementById('balance-amount').innerText = data.bonusBalance;
+            currentClient = data;
+        }
+    }
+
+    async function loadBonusHistory() {
+        const phone = document.getElementById('history-phone').value;
+        const client = await apiCall('/api/clients/by-phone/' + encodeURIComponent(phone));
+
+        if (client && client.id) {
+            const history = await apiCall('/api/clients/' + client.id + '/bonus-history');
+
+            if (history && Array.isArray(history)) {
+                let html = '<table class="data-table">';
+                html += '<tr><th>Дата</th><th>Тип</th><th>Сумма</th><th>Причина</th></tr>';
+
+                history.forEach(txn => {
+                    const date = new Date(txn.createdAt).toLocaleString();
+                    html += `<tr>
+                            <td>${date}</td>
+                            <td><span class="badge ${txn.txnType === 'EARN' ? 'success' : 'danger'}">${txn.txnType}</span></td>
+                            <td>${txn.signedAmount}</td>
+                            <td>${txn.reason || ''}</td>
+                        </tr>`;
+                });
+
+                html += '</table>';
+                document.getElementById('history-table').innerHTML = html;
+            }
+        }
+    }
+
+    // ========== БАРИСТА ==========
+    async function loadProductsForBarista() {
+        products = await apiCall('/api/menu/products') || [];
+        displayProducts(products);
+    }
+
+    function displayProducts(productsToShow) {
+        let html = '';
+        productsToShow.forEach(p => {
+            if (p.active) {
+                html += `
+                        <div class="product-tile" onclick="selectProduct(${p.id}, '${p.name}', ${p.price})">
+                            <div class="product-name">${p.name}</div>
+                            <div class="product-price">${p.price}₽</div>
+                            <div class="product-desc">${p.description || ''}</div>
+                        </div>
+                    `;
+            }
+        });
+        document.getElementById('products-grid').innerHTML = html || '<p>Нет активных товаров</p>';
+    }
+
+    function filterProducts(category) {
+        document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if (category === 'all') {
+            displayProducts(products);
+        } else {
+            const filtered = products.filter(p => p.category && p.category.name === category);
+            displayProducts(filtered);
+        }
+    }
+
+    let selectedProduct = null;
+    function selectProduct(id, name, price) {
+        selectedProduct = { id, name, price };
+        document.querySelectorAll('.product-tile').forEach(t => t.classList.remove('selected'));
+        event.target.classList.add('selected');
+    }
+
+    function showAddItemModal() {
+        if (!currentOrderId) {
+            alert('Сначала создайте заказ!');
+            return;
+        }
+
+        // Загружаем товары в select
+        let options = '<option value="">Выберите товар</option>';
+        products.forEach(p => {
+            if (p.active) {
+                options += `<option value="${p.id}">${p.name} - ${p.price}₽</option>`;
+            }
+        });
+        document.getElementById('add-product-select').innerHTML = options;
+
+        document.getElementById('add-item-modal').style.display = 'block';
+    }
+
+    function hideAddItemModal() {
+        document.getElementById('add-item-modal').style.display = 'none';
+    }
+
+    async function addItemToOrder() {
+        const productId = document.getElementById('add-product-select').value;
+        const qty = parseInt(document.getElementById('add-product-qty').value);
+
+        if (!productId) {
+            alert('Выберите товар');
+            return;
+        }
+
+        const data = await apiCall('/api/orders/' + currentOrderId + '/items', 'POST', {
+            productId: parseInt(productId),
+            qty: qty
+        });
+
+        if (data) {
+            currentOrder = data;
+            updateOrderDisplay();
+            hideAddItemModal();
+        }
+    }
+
+    async function createNewOrder() {
+        const data = await apiCall('/api/orders', 'POST', {
+            createdByUserId: 1,
+            phone: currentClient ? currentClient.phone : null
+        });
+
+        if (data) {
+            currentOrderId = data.id;
+            currentOrder = data;
+            document.getElementById('current-order-id').value = data.id;
+            updateOrderDisplay();
+        }
+    }
+
+    async function loadOrderItems() {
+        // В реальном API нужно добавить метод для получения позиций заказа
+        // Пока используем данные из currentOrder
+        if (currentOrder) {
+            updateOrderDisplay();
+        }
+    }
+
+    function updateOrderDisplay() {
+        if (!currentOrder) return;
+
+        // Обновляем информацию о клиенте
+        if (currentClient) {
+            document.getElementById('order-client').innerHTML =
+                `${currentClient.fullName} (${currentClient.phone})`;
+            document.getElementById('order-client-balance').innerHTML =
+                `Баланс: <strong>${currentClient.bonusBalance}</strong> бонусов`;
+        }
+
+        // Обновляем корзину
+        document.getElementById('cart-subtotal').innerHTML = currentOrder.subtotal + '₽';
+
+        const limit = Math.round(currentOrder.subtotal * 0.3);
+        document.getElementById('bonus-limit').innerHTML = limit + '₽';
+
+        const bonusInput = document.getElementById('bonus-to-spend');
+        bonusInput.max = Math.min(limit, currentClient?.bonusBalance || 0);
+
+        const total = currentOrder.total || currentOrder.subtotal;
+        document.getElementById('cart-total').innerHTML = total + '₽';
+
+        // Загружаем позиции заказа
+        loadOrderItemsFromServer();
+    }
+
+    async function loadOrderItemsFromServer() {
+        // В реальном API нужно добавить метод для получения items
+        // Пока показываем заглушку
+        const items = await apiCall('/api/orders/' + currentOrderId + '/items');
+        if (items && Array.isArray(items)) {
+            let html = '';
+            items.forEach(item => {
+                html += `
+                        <div class="cart-item">
+                            <span>${item.productNameSnap} x${item.qty}</span>
+                            <span>${item.lineTotal}₽</span>
+                        </div>
+                    `;
+            });
+            document.getElementById('mini-cart').innerHTML = html || '<p>Корзина пуста</p>';
+        }
+    }
+
+    async function spendBonuses() {
+        if (!currentOrderId) {
+            alert('Нет активного заказа');
+            return;
+        }
+
+        const amount = document.getElementById('bonus-to-spend').value;
+
+        const data = await apiCall('/api/orders/' + currentOrderId + '/spend-bonus', 'POST', {
+            amount: parseFloat(amount)
+        });
+
+        if (data) {
+            currentOrder = data;
+            updateOrderDisplay();
+
+            // Обновляем баланс клиента
+            if (currentClient) {
+                const client = await apiCall('/api/clients/by-phone/' + encodeURIComponent(currentClient.phone));
+                if (client) {
+                    currentClient = client;
+                    document.getElementById('order-client-balance').innerHTML =
+                        `Баланс: <strong>${client.bonusBalance}</strong> бонусов`;
+                }
+            }
+        }
+    }
+
+    async function completeOrder() {
+        if (!currentOrderId) {
+            alert('Нет активного заказа');
+            return;
+        }
+
+        const data = await apiCall('/api/orders/' + currentOrderId + '/complete', 'POST');
+
+        if (data) {
+            currentOrder = data;
+            alert('Заказ завершен! Начислен кэшбэк 5%');
+            updateOrderDisplay();
+
+            // Сбрасываем текущий заказ
+            currentOrderId = null;
+            currentOrder = null;
+            document.getElementById('current-order-id').value = '';
+            document.getElementById('mini-cart').innerHTML = '<p>Корзина пуста</p>';
+        }
+    }
+
+    function showClientSearch() {
+        document.getElementById('client-search-modal').style.display = 'block';
+    }
+
+    function hideClientSearch() {
+        document.getElementById('client-search-modal').style.display = 'none';
+    }
+
+    async function searchClient() {
+        const phone = document.getElementById('search-phone').value;
+        const data = await apiCall('/api/clients/by-phone/' + encodeURIComponent(phone));
+
+        if (data) {
+            currentClient = data;
+            document.getElementById('order-client').innerHTML =
+                `${data.fullName} (${data.phone})`;
+            document.getElementById('order-client-balance').innerHTML =
+                `Баланс: <strong>${data.bonusBalance}</strong> бонусов`;
+            hideClientSearch();
+
+            // Если есть текущий заказ, обновляем его с новым клиентом
+            if (currentOrderId) {
+                // В реальном API нужно добавить метод для привязки клиента к заказу
+            }
+        }
+    }
+
+    async function registerNewClient() {
+        const phone = document.getElementById('search-phone').value;
+        const name = prompt('Имя клиента:', 'Новый клиент');
+
+        if (!name) return;
+
+        const data = await apiCall('/api/clients/register', 'POST', {
+            phone: phone,
+            fullName: name
+        });
+
+        if (data) {
+            alert('Клиент зарегистрирован! +50 бонусов');
+            searchClient(); // Обновим отображение
+        }
+    }
+
+    // ========== АДМИН ==========
+    async function loadAdminProducts() {
+        const data = await apiCall('/api/menu/products');
+
+        if (data && Array.isArray(data)) {
+            let html = '';
+            data.forEach(p => {
+                html += `<tr>
+                        <td>${p.id}</td>
+                        <td>${p.category?.name || '-'}</td>
+                        <td>${p.name}</td>
+                        <td>${p.price}₽</td>
+                        <td><span class="badge ${p.active ? 'success' : 'danger'}">${p.active ? 'Да' : 'Нет'}</span></td>
+                    </tr>`;
+            });
+            document.getElementById('products-table-body').innerHTML = html;
+        }
+    }
+
+    function filterAdminProducts() {
+        const category = document.getElementById('admin-category-filter').value;
+        if (category === 'all') {
+            loadAdminProducts();
+        } else {
+            apiCall('/api/menu/products?category=' + encodeURIComponent(category))
+                .then(data => {
+                    if (data && Array.isArray(data)) {
+                        let html = '';
+                        data.forEach(p => {
+                            html += `<tr>
+                                    <td>${p.id}</td>
+                                    <td>${p.category?.name || '-'}</td>
+                                    <td>${p.name}</td>
+                                    <td>${p.price}₽</td>
+                                    <td><span class="badge ${p.active ? 'success' : 'danger'}">${p.active ? 'Да' : 'Нет'}</span></td>
+                                </tr>`;
+                        });
+                        document.getElementById('products-table-body').innerHTML = html;
+                    }
+                });
+        }
+    }
+
+    async function loadAllOrders() {
+        const data = await apiCall('/api/orders/all');
+
+        if (data && Array.isArray(data)) {
+            let html = '';
+            data.forEach(o => {
+                const date = new Date(o.createdAt).toLocaleDateString();
+                html += `<tr>
+                        <td>${o.id}</td>
+                        <td>${date}</td>
+                        <td>${o.clientId || 'Нет'}</td>
+                        <td>${o.total}₽</td>
+                        <td><span class="badge ${o.status === 'COMPLETED' ? 'success' : 'warning'}">${o.status}</span></td>
+                    </tr>`;
+            });
+            document.getElementById('orders-table-body').innerHTML = html;
+        }
+    }
+
+    async function loadAllClients() {
+        // В реальном API нужно добавить метод getAllClients
+        // Пока используем поиск по тестовому номеру
+        const client = await apiCall('/api/clients/by-phone/+79991112233');
+
+        if (client) {
+            let html = '<table class="data-table">';
+            html += '<tr><th>ID</th><th>Телефон</th><th>Имя</th><th>Баланс</th></tr>';
+            html += `<tr>
+                    <td>${client.id}</td>
+                    <td>${client.phone}</td>
+                    <td>${client.fullName || '-'}</td>
+                    <td><strong>${client.bonusBalance}</strong></td>
+                </tr>`;
+            html += '</table>';
+            document.getElementById('clients-list').innerHTML = html;
+        }
+    }
+
+    async function loadAdminStats() {
+        // Собираем статистику из разных запросов
+        const orders = await apiCall('/api/orders/all') || [];
+        const products = await apiCall('/api/menu/products') || [];
+
+        const completedOrders = orders.filter(o => o.status === 'COMPLETED');
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+        const totalBonuses = completedOrders.reduce((sum, o) => sum + (o.bonusSpent || 0), 0);
+
+        const statsHtml = `
+                <div class="totals-row">
+                    <span>Всего заказов:</span>
+                    <span>${orders.length}</span>
+                </div>
+                <div class="totals-row">
+                    <span>Завершенных заказов:</span>
+                    <span>${completedOrders.length}</span>
+                </div>
+                <div class="totals-row">
+                    <span>Общая выручка:</span>
+                    <span>${totalRevenue}₽</span>
+                </div>
+                <div class="totals-row">
+                    <span>Всего списано бонусов:</span>
+                    <span>${totalBonuses}</span>
+                </div>
+                <div class="totals-row">
+                    <span>Товаров в меню:</span>
+                    <span>${products.length}</span>
+                </div>
+            `;
+
+        document.getElementById('stats-display').innerHTML = statsHtml;
+    }
+
+    // Инициализация при загрузке
+    window.onload = function() {
+        loadProductsForBarista();
+    };
+</script>
+</body>
+</html>
